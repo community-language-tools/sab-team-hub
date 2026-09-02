@@ -1,0 +1,8 @@
+{
+  "_comment": "Copy to users.json and fill in your own details. users.json is listed in .gitignore and is never committed.",
+  "users": [
+    { "id": "ALICE", "displayName": "Alice", "role": "member" },
+    { "id": "BOB", "displayName": "Bob", "role": "member" },
+    { "id": "ADMIN", "displayName": "Admin", "role": "administrator" }
+  ]
+}

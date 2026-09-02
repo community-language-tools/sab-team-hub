@@ -1,0 +1,6 @@
+{
+  "_comment": "Copy to team.json and fill in your own details. team.json is listed in .gitignore and is never committed.",
+  "teamName": "Example Team",
+  "project": "EXAMPLE1",
+  "members": ["ALICE", "BOB", "ADMIN"]
+}

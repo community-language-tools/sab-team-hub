@@ -1,0 +1,39 @@
+# --- Real team configuration: never committed ---
+private-data/
+config/team.json
+config/users.json
+config/projects.json
+
+# --- Secrets ---
+.env
+.env.*
+secrets/
+credentials/
+*.key
+*.pem
+*.pfx
+
+# --- Large binaries do not belong in Git ---
+*.wav
+*.mp3
+*.mp4
+*.zip
+
+# --- Windows / editor ---
+Thumbs.db
+desktop.ini
+.vscode/settings.json
+
+# --- Dependencies and build output ---
+node_modules/
+dist/
+build/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# --- Logs and temporary files ---
+*.log
+tmp/
+temp/

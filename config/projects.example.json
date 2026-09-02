@@ -1,0 +1,6 @@
+{
+  "_comment": "Copy to projects.json and fill in your own details. projects.json is listed in .gitignore and is never committed.",
+  "projects": [
+    { "code": "EXAMPLE1", "displayName": "Example project 1" }
+  ]
+}
