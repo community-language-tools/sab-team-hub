@@ -26,6 +26,11 @@ param(
     [string] $HubScriptName = 'SAB-Team-Hub.ps1',
 
     [string] $ConfirmationWord = 'CONFIRM'
+,
+    # Passed by the runner. Empty when the code under test is an installed deployment
+    # rather than this repository.
+    [Parameter()]
+    [string] $RepoRoot
 )
 
 BeforeAll {

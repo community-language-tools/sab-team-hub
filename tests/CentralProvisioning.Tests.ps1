@@ -14,6 +14,11 @@ param(
     [Parameter(Mandatory)][string] $HubSource,
     [Parameter(Mandatory)][string] $HubScriptName,
     [Parameter()][string] $ConfirmationWord = 'CONFIRM'
+,
+    # Passed by the runner. Empty when the code under test is an installed deployment
+    # rather than this repository.
+    [Parameter()]
+    [string] $RepoRoot
 )
 
 BeforeDiscovery {

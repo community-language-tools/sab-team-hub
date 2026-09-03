@@ -17,6 +17,13 @@ All notable changes to this project are recorded here.
 - Tests for provisioning, including the check that matters: a project the script creates is
   one the real engine accepts. They are skipped, not silently passed, when the code under
   test is a deployment that has no provisioning script.
+- `src/Install-TeamHub.ps1` — installs the Hub onto one computer from this repository,
+  assembling `src/`, `languages/` and the prepared configuration into the single folder the
+  engine expects. It validates the chosen member against the team list and the chosen
+  language against what is actually translated, so neither is a fixed list in code, and it
+  can optionally publish the team list to the shared drive so it is maintained in one place.
+- `src/SAB Team Hub.cmd` — a launcher, so a member starts the Hub without a command line.
+- Tests for installation, which run the real engine out of what was installed.
 - Characterization test suite (Pester): authorized deletion of central files, and lock
   ownership. Both parameterised on the code under test, so the same tests run against an
   existing deployment and against this repository's own code.

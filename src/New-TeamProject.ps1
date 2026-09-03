@@ -55,7 +55,7 @@ and history are left alone. Refuses without this switch.
 
 .EXAMPLE
     # Read the shared storage location and required SAB version from the installed config:
-    ./New-TeamProject.ps1 -Code LSK1 -ConfigPath 'C:\SABTEAMHUB\_HUB\TeamConfig.json' -SeedFrom 'C:\My SAB Projects\LSK1'
+    ./New-TeamProject.ps1 -Code MYPROJ -ConfigPath 'C:\SABTEAMHUB\_HUB\TeamConfig.json' -SeedFrom 'C:\My SAB Projects\MYPROJ'
 
 .EXAMPLE
     # Everything explicit, empty master:

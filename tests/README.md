@@ -30,8 +30,12 @@ refusals, and the refusals print.
 - Authorized deletion of central files -- deletion requires the confirmation word.
 - Lock ownership -- only the holder may send or release.
 - Creating a central project -- including the check that matters, that the engine accepts
-  what the provisioning script produces. Skipped, not silently passed, when the code under
-  test is a deployment with no provisioning script.
+  what the provisioning script produces.
+- Installing onto a computer -- ending by running the real engine out of what was installed.
+
+Provisioning and installing are new behaviour: there is nothing in an existing deployment to
+characterize, so those tests state a specification instead. They are skipped, not silently
+passed, when the code under test is a deployment that does not have those scripts.
 
 ## What is not covered
 
