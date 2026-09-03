@@ -53,7 +53,14 @@ if ($PSCmdlet.ParameterSetName -eq 'Repository') {
     $assembled = Join-Path ([IO.Path]::GetTempPath()) ('sabhub-src-' + [guid]::NewGuid().ToString('N'))
     New-Item -ItemType Directory -Force -Path $assembled, (Join-Path $assembled 'Languages') | Out-Null
 
-    Copy-Item -LiteralPath (Join-Path $repo (Join-Path 'src' $HubScriptName)) -Destination (Join-Path $assembled $HubScriptName)
+    # Every script in src/, not just the one under test: an installer installs the whole
+    # set, and the provisioning script has to sit beside the Hub the way it really will.
+    $srcRoot = Join-Path $repo 'src'
+    if (-not (Test-Path -LiteralPath (Join-Path $srcRoot $HubScriptName) -PathType Leaf)) {
+        throw ("Not found in src/: {0}" -f $HubScriptName)
+    }
+    Get-ChildItem -LiteralPath $srcRoot -File -Filter '*.ps1' |
+        ForEach-Object { Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $assembled $_.Name) }
     Copy-Item -LiteralPath (Join-Path $repo (Join-Path 'config' 'team.example.json')) -Destination (Join-Path $assembled 'TeamConfig.json')
     Get-ChildItem -LiteralPath (Join-Path $repo 'languages') -File -Filter '*.json' |
         ForEach-Object { Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $assembled 'Languages') }
