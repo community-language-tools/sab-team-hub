@@ -13,14 +13,22 @@
 
 .EXAMPLE
     # Against this repository's own code:
-    ./Invoke-Tests.ps1 -HubSource '../src'
+    ./Invoke-Tests.ps1 -RepoRoot '..'
 #>
 
-[CmdletBinding()]
+[CmdletBinding(DefaultParameterSetName = 'Deployment')]
 param(
-    # Folder holding the hub script, TeamConfig.json, Users.json and Languages/.
-    [Parameter(Mandatory)]
+    # Folder holding the hub script, TeamConfig.json, Users.json and Languages/ side by
+    # side, the way an installed Hub has them.
+    [Parameter(Mandatory, ParameterSetName = 'Deployment')]
     [string] $HubSource,
+
+    # This repository's root. The repository is not laid out like an installed Hub -- code,
+    # user-facing text and example configuration live in separate folders on purpose -- so
+    # a Hub is assembled from them in TEMP and the same tests run against that. The
+    # assembly is exactly what an installer has to do, which is why it is worth testing.
+    [Parameter(Mandatory, ParameterSetName = 'Repository')]
+    [string] $RepoRoot,
 
     # Defaults to this repository's own script name. Pass the deployment's filename
     # explicitly when testing against an existing install.
@@ -38,6 +46,21 @@ $ErrorActionPreference = 'Stop'
 
 Import-Module Pester -MinimumVersion 5.0.0 -Force
 Write-Host ("Pester {0}" -f (Get-Module Pester).Version) -ForegroundColor Cyan
+
+$assembled = $null
+if ($PSCmdlet.ParameterSetName -eq 'Repository') {
+    $repo = (Resolve-Path -LiteralPath $RepoRoot).Path
+    $assembled = Join-Path ([IO.Path]::GetTempPath()) ('sabhub-src-' + [guid]::NewGuid().ToString('N'))
+    New-Item -ItemType Directory -Force -Path $assembled, (Join-Path $assembled 'Languages') | Out-Null
+
+    Copy-Item -LiteralPath (Join-Path $repo (Join-Path 'src' $HubScriptName)) -Destination (Join-Path $assembled $HubScriptName)
+    Copy-Item -LiteralPath (Join-Path $repo (Join-Path 'config' 'team.example.json')) -Destination (Join-Path $assembled 'TeamConfig.json')
+    Get-ChildItem -LiteralPath (Join-Path $repo 'languages') -File -Filter '*.json' |
+        ForEach-Object { Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $assembled 'Languages') }
+
+    $HubSource = $assembled
+    Write-Host ("Assembled a Hub from {0}" -f $repo) -ForegroundColor Cyan
+}
 
 $resolvedSource = (Resolve-Path -LiteralPath $HubSource).Path
 Write-Host ("Testing: {0}" -f $resolvedSource) -ForegroundColor Cyan
@@ -59,5 +82,10 @@ if ($ResultsPath) {
     $config.TestResult.OutputFormat = 'NUnitXml'
 }
 
-$result = Invoke-Pester -Configuration $config
+try { $result = Invoke-Pester -Configuration $config }
+finally {
+    if ($assembled -and (Test-Path -LiteralPath $assembled)) {
+        Remove-Item -LiteralPath $assembled -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
 exit $result.FailedCount

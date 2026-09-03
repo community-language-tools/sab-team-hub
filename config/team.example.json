@@ -1,6 +1,14 @@
 {
-  "_comment": "Copy to team.json and fill in your own details. team.json is listed in .gitignore and is never committed.",
+  "_comment": "Copy to team.json and fill in your own details. team.json is listed in .gitignore and is never committed. This file is installed into the Hub folder as TeamConfig.json.",
+  "schemaVersion": 1,
   "teamName": "Example Team",
-  "project": "EXAMPLE1",
-  "members": ["ALICE", "BOB", "ADMIN"]
+  "centralRoot": "P:\\SAB_TEAM",
+  "localRoot": "C:\\SAB_TEAM",
+  "sabCommand": "C:\\Program Files\\SIL\\Scripture App Builder\\sab.bat",
+  "requiredVersion": "14.4",
+  "requiredRelease": "179",
+  "deletionConfirmationWord": "CONFIRM",
+  "lockConfirmationSeconds": 2,
+  "sabStartupTimeoutSeconds": 15,
+  "sabWindowTimeoutSeconds": 60
 }

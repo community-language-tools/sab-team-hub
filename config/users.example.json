@@ -1,8 +1,9 @@
 {
-  "_comment": "Copy to users.json and fill in your own details. users.json is listed in .gitignore and is never committed.",
+  "_comment": "Copy to users.json and fill in your own details. users.json is listed in .gitignore and is never committed. This file is installed into the Hub folder as Users.json, and may also be placed centrally at <centralRoot>\\_DISTRIBUTION\\Users.json, which then takes precedence.",
+  "schemaVersion": 1,
   "users": [
-    { "id": "ALICE", "displayName": "Alice", "role": "member" },
-    { "id": "BOB", "displayName": "Bob", "role": "member" },
-    { "id": "ADMIN", "displayName": "Admin", "role": "administrator" }
+    { "id": "ALICE", "displayName": "Alice", "role": "member", "enabled": true },
+    { "id": "BOB", "displayName": "Bob", "role": "member", "enabled": true },
+    { "id": "ADMIN", "displayName": "Admin", "role": "administrator", "enabled": true }
   ]
 }
