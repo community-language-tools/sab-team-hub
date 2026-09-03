@@ -166,6 +166,74 @@ function New-TestWorld {
     }
 }
 
+function New-HubOnlyWorld {
+    <#
+    .SYNOPSIS
+        Builds a world with an installed Hub but NO central project.
+
+    .DESCRIPTION
+        New-TestWorld hand-builds a central project, because the tests that use it are
+        about what the Hub does to a project that already exists. Provisioning is the
+        opposite case: the central root is empty and the project has to be created. This
+        builds that starting point and nothing more.
+
+        Deliberately not folded into New-TestWorld: those tests are green against two
+        different copies of the engine, and reshaping their world to serve a third
+        purpose is how a passing suite quietly stops testing what it claims to.
+    #>
+    param(
+        [Parameter(Mandatory)][string] $Source,
+        [Parameter(Mandatory)][string] $HubScriptName,
+        [Parameter(Mandatory)][string] $ProjectCode,
+        [string] $IdentityUserId = 'TESTADMIN'
+    )
+
+    $root        = Join-Path ([IO.Path]::GetTempPath()) ('sabhub-prov-' + [guid]::NewGuid().ToString('N'))
+    $localRoot   = Join-Path $root 'LOCAL'
+    $centralRoot = Join-Path $root 'CENTRAL'
+    $hub         = Join-Path $localRoot '_HUB'
+
+    New-Item -ItemType Directory -Force -Path @(
+        $hub, (Join-Path $hub 'Config'), (Join-Path $hub 'Languages'), $centralRoot, $localRoot
+    ) | Out-Null
+
+    Copy-Item -LiteralPath (Join-Path $Source 'TeamConfig.json') -Destination (Join-Path $hub 'TeamConfig.json')
+    Get-ChildItem -LiteralPath $Source -File -Filter '*.ps1' |
+        ForEach-Object { Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $hub $_.Name) }
+    Get-ChildItem -LiteralPath (Join-Path $Source 'Languages') -File -Filter '*.json' |
+        ForEach-Object { Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $hub 'Languages') }
+
+    $identityNames = @{ TESTADMIN = 'Test administrator'; TESTMEMBER = 'Test member' }
+    Write-Utf8Json -Path (Join-Path $hub 'Users.json') -Value ([pscustomobject]@{
+        schemaVersion = 1
+        users = @(
+            [pscustomobject]@{ id = 'TESTADMIN';  displayName = 'Test administrator'; role = 'administrator'; enabled = $true }
+            [pscustomobject]@{ id = 'TESTMEMBER'; displayName = 'Test member';        role = 'member';        enabled = $true }
+        )
+    })
+
+    Write-Utf8Json -Path (Join-Path $hub 'Config\Identity.json') -Value ([pscustomobject][ordered]@{
+        schemaVersion = 1
+        userId        = $IdentityUserId
+        displayName   = $identityNames[$IdentityUserId]
+        role          = if ($IdentityUserId -eq 'TESTADMIN') { 'administrator' } else { 'member' }
+        windowsUser   = $env:USERNAME
+        computerName  = $env:COMPUTERNAME
+        uiLanguage    = 'en'
+        createdUtc    = (Get-Date).ToUniversalTime().ToString('o')
+    })
+
+    [pscustomobject]@{
+        Root            = $root
+        LocalRoot       = $localRoot
+        CentralRoot     = $centralRoot
+        ProjectCode     = $ProjectCode
+        HubScript       = Join-Path $hub $HubScriptName
+        ProvisionScript = Join-Path $hub 'New-TeamProject.ps1'
+        CentralProject  = Join-Path $centralRoot $ProjectCode
+    }
+}
+
 function Invoke-HubAction {
     <#
     .SYNOPSIS
@@ -192,4 +260,4 @@ function Remove-TestWorld {
     }
 }
 
-Export-ModuleMember -Function New-TestWorld, Invoke-HubAction, Remove-TestWorld, Write-Utf8Json
+Export-ModuleMember -Function New-TestWorld, New-HubOnlyWorld, Invoke-HubAction, Remove-TestWorld, Write-Utf8Json

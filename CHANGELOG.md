@@ -11,15 +11,22 @@ All notable changes to this project are recorded here.
   fixed in the code.
 - `tests/Invoke-Tests.ps1 -RepoRoot` assembles a Hub from this repository's own layout, so
   the same suite runs against both an installed deployment and the code here.
+- `src/New-TeamProject.ps1` — creates a central project on shared storage. The engine can
+  receive, send and lock a project but never could create one; every deployment so far had
+  its central project built by hand. Without this a new team could not start at all.
+- Tests for provisioning, including the check that matters: a project the script creates is
+  one the real engine accepts. They are skipped, not silently passed, when the code under
+  test is a deployment that has no provisioning script.
+- Characterization test suite (Pester): authorized deletion of central files, and lock
+  ownership. Both parameterised on the code under test, so the same tests run against an
+  existing deployment and against this repository's own code.
+- Repository skeleton: folder structure, `.gitignore`, MIT `LICENSE`, `README.md`,
+  `CONTRIBUTING.md`, `AGENTS.md`/`CLAUDE.md`.
 
 ### Changed
 - `config/team.example.json` and `config/users.example.json` now match the schema the
   engine actually reads. They previously described fields that did not exist.
 - Two places in the engine chose their wording by testing which language was active. Both
   now read the text from `languages/`, as the architecture requires.
-
-- Characterization test suite (Pester): authorized deletion of central files, and lock
-  ownership. Both parameterised on the code under test, so the same tests run against an
-  existing deployment and against this repository's own code.
-- Repository skeleton: folder structure, `.gitignore`, MIT `LICENSE`, `README.md`,
-  `CONTRIBUTING.md`, `AGENTS.md`/`CLAUDE.md`.
+- `tests/Invoke-Tests.ps1 -RepoRoot` now installs every script in `src/`, not only the one
+  under test, because that is what an installer does.
