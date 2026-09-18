@@ -12,7 +12,7 @@ confirmation word and are backed up before they are applied.
 [CmdletBinding()]
 param(
     [Parameter()]
-    [ValidateSet('Menu', 'Identify', 'Status', 'StartWork', 'SendFinish', 'ReleaseClean', 'AdminUnlock')]
+    [ValidateSet('Menu', 'Identify', 'Help', 'Status', 'StartWork', 'SendFinish', 'ReleaseClean', 'AdminUnlock')]
     [string] $Action = 'Menu',
 
     [Parameter()]
@@ -265,6 +265,7 @@ function Ensure-LocalProjectStructure {
         (Join-Path $Context.LocalShared 'Contents'),
         (Join-Path $Context.LocalShared 'Keystore'),
         (Join-Path $Context.LocalShared 'Resources'),
+        (Join-Path $Context.LocalShared 'Resources\Audio'),
         $Context.LocalPrivate,
         (Join-Path $Context.LocalPrivate 'App Output\Apk'),
         (Join-Path $Context.LocalPrivate 'App Output\Epub'),
@@ -961,6 +962,85 @@ function Show-ProjectStatus {
     else { Write-Host (Get-Text 'locked_by' @($lock.displayName,$lock.computerName,$lock.acquiredUtc)) -ForegroundColor Yellow }
 }
 
+function Show-Help {
+    Write-Host ''
+    foreach ($line in @($script:messages.help_lines)) {
+        if ([string]::IsNullOrWhiteSpace([string]$line)) { Write-Host '' }
+        elseif ([string]$line -match '^## ') { Write-Host ([string]$line).Substring(3) -ForegroundColor Cyan }
+        else { Write-Host ([string]$line) }
+    }
+}
+
+function Show-ResourceChangeList {
+    param(
+        [Parameter(Mandatory)][string] $HeadingKey,
+        [Parameter(Mandatory)][AllowEmptyCollection()][string[]] $Paths,
+        [Parameter()][ConsoleColor] $Color = [ConsoleColor]::Gray
+    )
+    if ($Paths.Count -eq 0) { return }
+    Write-Host (Get-Text $HeadingKey) -ForegroundColor $Color
+    foreach ($path in $Paths) { Write-Host ('  - {0}' -f $path) -ForegroundColor $Color }
+}
+
+function Invoke-ResourcePreparation {
+    param([Parameter(Mandatory)] $Context)
+
+    $picturesPath = Join-Path $Context.LocalShared 'Resources'
+    $audioPath = Join-Path $Context.LocalShared 'Resources\Audio'
+    New-Item -ItemType Directory -Force -Path $picturesPath, $audioPath | Out-Null
+
+    while ($true) {
+        Write-Host ''
+        Write-Host (Get-Text 'prepare_resources') -ForegroundColor Yellow
+        Write-Host ('  1. {0}' -f (Get-Text 'prepare_none'))
+        Write-Host ('  2. {0}' -f (Get-Text 'prepare_pictures'))
+        Write-Host ('  3. {0}' -f (Get-Text 'prepare_audio'))
+        Write-Host ('  4. {0}' -f (Get-Text 'prepare_both'))
+        $choice = Read-Host '1 / 2 / 3 / 4'
+        Write-Host "[TRACE] resources => $choice" -ForegroundColor DarkGray
+        if ($choice -eq '1') { return }
+        if ($choice -notin @('2', '3', '4')) { continue }
+
+        $folders = @()
+        if ($choice -in @('2', '4')) { $folders += $picturesPath }
+        if ($choice -in @('3', '4')) { $folders += $audioPath }
+        foreach ($folder in $folders) {
+            Start-Process -FilePath 'explorer.exe' -ArgumentList ('"{0}"' -f $folder)
+            Write-Host (Get-Text 'resource_folder_opened' @($folder)) -ForegroundColor Cyan
+        }
+
+        Write-Host (Get-Text 'resource_copy_instructions') -ForegroundColor Yellow
+        [void](Read-Host (Get-Text 'resource_done_prompt'))
+
+        $changes = Get-LocalChanges -Directory $Context.LocalShared -BaselineManifest $Context.LocalBaseline
+        $newResources = @($changes.New | Where-Object { $_ -like 'Resources\*' } | Sort-Object)
+        $changedResources = @($changes.Different | Where-Object { $_ -like 'Resources\*' } | Sort-Object)
+        $missingResources = @($changes.Missing | Where-Object { $_ -like 'Resources\*' } | Sort-Object)
+
+        Write-Host (Get-Text 'resource_summary' @($newResources.Count, $changedResources.Count, $missingResources.Count)) -ForegroundColor Cyan
+        Show-ResourceChangeList -HeadingKey 'resource_new_heading' -Paths $newResources -Color Green
+        Show-ResourceChangeList -HeadingKey 'resource_changed_heading' -Paths $changedResources -Color Yellow
+        Show-ResourceChangeList -HeadingKey 'resource_missing_heading' -Paths $missingResources -Color Red
+
+        if ($newResources.Count + $changedResources.Count + $missingResources.Count -eq 0) {
+            Write-Host (Get-Text 'resource_no_changes') -ForegroundColor Yellow
+            return
+        }
+        if ($missingResources.Count -gt 0) {
+            Write-Host (Get-Text 'resource_missing_warning') -ForegroundColor Red
+        }
+        if ($changedResources.Count -gt 0) {
+            Write-Host (Get-Text 'resource_replacement_warning' @($changedResources.Count)) -ForegroundColor Yellow
+            $replacementChoice = Read-Host (Get-Text 'resource_replacement_choice')
+            if ($replacementChoice -ne '1') {
+                Write-Host (Get-Text 'resource_reopen') -ForegroundColor Yellow
+                continue
+            }
+        }
+        return
+    }
+}
+
 function Start-TeamWork {
     param([Parameter(Mandatory)]$Context,[Parameter(Mandatory)]$Identity)
     if (Test-SabRunning) { throw (Get-Text 'sab_running') }
@@ -978,6 +1058,7 @@ function Start-TeamWork {
         throw
     }
     if (-not $NoLaunch) {
+        Invoke-ResourcePreparation -Context $Context
         Configure-And-StartSab -Context $Context
     }
 }
@@ -1027,16 +1108,18 @@ function Invoke-TeamMenu {
         Write-Host ('  2. {0}' -f (Get-Text 'send_finish'))
         Write-Host ('  3. {0}' -f (Get-Text 'release_clean'))
         Write-Host ('  4. {0}' -f (Get-Text 'status'))
-        Write-Host ('  5. {0}' -f (Get-Text 'change_identity'))
+        Write-Host ('  5. {0}' -f (Get-Text 'need_help'))
+        Write-Host ('  6. {0}' -f (Get-Text 'change_identity'))
         Write-Host ('  0. {0}' -f (Get-Text 'exit'))
-        $choice = Read-Host '0 / 1 / 2 / 3 / 4 / 5'
+        $choice = Read-Host '0 / 1 / 2 / 3 / 4 / 5 / 6'
         Write-Host "[TRACE] action => $choice" -ForegroundColor DarkGray
         switch ($choice) {
             '1' { Start-TeamWork -Context $context -Identity $Identity; return }
             '2' { Send-Project -Context $context -Identity $Identity; return }
             '3' { Release-CleanProject -Context $context -Identity $Identity; return }
             '4' { Show-ProjectStatus -Context $context -Identity $Identity; [void](Read-Host (Get-Text 'press_key')) }
-            '5' { $language = Select-Language; Import-Messages -Language $language; $Identity = Set-TeamIdentity -SelectedUserId '' -Language $language }
+            '5' { Show-Help; [void](Read-Host (Get-Text 'press_key')) }
+            '6' { $language = Select-Language; Import-Messages -Language $language; $Identity = Set-TeamIdentity -SelectedUserId '' -Language $language }
             '0' { return }
             default { throw "Invalid action selection: $choice" }
         }
@@ -1068,6 +1151,7 @@ if (-not (Test-Path -LiteralPath $identityPath -PathType Leaf)) {
 $identity = Get-TeamIdentity
 
 if ($Action -eq 'Menu') { Invoke-TeamMenu -Identity $identity; return }
+if ($Action -eq 'Help') { Show-Help; return }
 if ([string]::IsNullOrWhiteSpace($Project)) { throw 'Specify -Project for this action.' }
 $context = Get-ProjectContext -Code $Project
 
