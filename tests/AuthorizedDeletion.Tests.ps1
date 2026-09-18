@@ -24,6 +24,11 @@ param(
     # The word that authorizes deletion. A parameter because it is scheduled to become
     # configurable per team; pass the value the code under test actually expects.
     [string] $ConfirmationWord = 'CONFIRM'
+,
+    # Passed by the runner. Empty when the code under test is an installed deployment
+    # rather than this repository.
+    [Parameter()]
+    [string] $RepoRoot
 )
 
 BeforeAll {

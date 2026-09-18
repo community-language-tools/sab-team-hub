@@ -48,8 +48,10 @@ Import-Module Pester -MinimumVersion 5.0.0 -Force
 Write-Host ("Pester {0}" -f (Get-Module Pester).Version) -ForegroundColor Cyan
 
 $assembled = $null
+$resolvedRepoRoot = ''
 if ($PSCmdlet.ParameterSetName -eq 'Repository') {
     $repo = (Resolve-Path -LiteralPath $RepoRoot).Path
+    $resolvedRepoRoot = $repo
     $assembled = Join-Path ([IO.Path]::GetTempPath()) ('sabhub-src-' + [guid]::NewGuid().ToString('N'))
     New-Item -ItemType Directory -Force -Path $assembled, (Join-Path $assembled 'Languages') | Out-Null
 
@@ -76,6 +78,9 @@ $container = New-PesterContainer -Path (Join-Path $PSScriptRoot '*.Tests.ps1') -
     HubSource        = $resolvedSource
     HubScriptName    = $HubScriptName
     ConfirmationWord = $ConfirmationWord
+    # Empty when testing an installed deployment: the installer needs a repository to
+    # install FROM, which a deployment is not. Tests that need it skip when it is empty.
+    RepoRoot         = $resolvedRepoRoot
 }
 
 $config = New-PesterConfiguration
