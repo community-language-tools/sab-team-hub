@@ -1,5 +1,7 @@
 # SAB Team Hub
 
+[![Tests](https://github.com/community-language-tools/sab-team-hub/actions/workflows/tests.yml/badge.svg)](https://github.com/community-language-tools/sab-team-hub/actions/workflows/tests.yml)
+
 Shared, version-controlled collaboration on a Scripture App Builder project over ordinary
 shared storage (pCloud, Google Drive), with turn-taking that prevents team members from
 overwriting each other's work.
