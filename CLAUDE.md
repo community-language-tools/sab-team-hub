@@ -53,4 +53,12 @@ would weaken filesystem-level guarantees this tool depends on.
 
 ## Tests
 
-_To be written (Pester, running in GitHub Actions on `windows-latest`)._
+Pester, in `tests/`, run by `tests/Invoke-Tests.ps1`. Point the runner at whichever copy of
+the code you want to verify:
+
+    ./tests/Invoke-Tests.ps1 -RepoRoot '.'
+
+`.github/workflows/tests.yml` runs the same suite on `windows-latest` for every pull
+request and every push to `main`. The runner exits with the number of failed tests, so a
+red suite fails the build. The suite prints red error text while it runs: that is tests
+checking that the program refuses unsafe things, not a failure. Read the summary line.
