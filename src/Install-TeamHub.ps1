@@ -208,8 +208,7 @@ else {
 
 # Only the two top-level folders per project. The engine creates the full substructure
 # itself, on first use, in Ensure-LocalProjectStructure -- and a second copy of that folder
-# list here would be one more place to forget to update. The existing deployment has three
-# copies of it, and they have already drifted apart.
+# list here would be one more place to forget to update.
 $centralProjects = @(Get-ChildItem -LiteralPath $CentralRoot -Directory -Force |
     Where-Object {
         -not $_.Name.StartsWith('_') -and
