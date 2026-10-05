@@ -145,15 +145,14 @@ Once these are in place they protect you automatically. Current status:
       - "Require a pull request before merging" — never straight onto `main`
       - "Require status checks to pass before merging" — tests as the gatekeeper
 
-      **Not available yet.** GitHub does not offer branch protection on a *private*
-      repository on the free plan. Until this repository is public (or the account is on a
-      paid plan), "never commit directly to `main`" is a rule kept by hand, not a gate the
-      server enforces. Set this up on the day the repository goes public.
+      **Available now, still to be switched on.** This repository is public, so GitHub
+      offers branch protection on the free plan. Until the rule is added, "never commit
+      directly to `main`" is a rule kept by hand, not a gate the server enforces. Add the
+      rule, and mark the `Pester on Windows PowerShell 5.1` check as required.
 
-- [ ] **Continuous integration running the tests** in `.github/workflows/` — **not set up
-      yet.** The folder exists and is empty. Note that the test suite needs to be pointed
-      at a copy of the scripts under test, so it can only run automatically once this
-      repository contains its own code in `src/`.
+- [x] **Continuous integration running the tests**, in `.github/workflows/tests.yml`. Every
+      pull request, and every push to `main`, runs the whole suite on Windows against this
+      repository's own `src/`. A pull request whose tests are red must not be merged.
 
 - [x] **`.gitignore`** excluding all real data and secrets, before the first push.
 
