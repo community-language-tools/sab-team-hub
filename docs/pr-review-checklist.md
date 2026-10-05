@@ -141,14 +141,16 @@ handing a project over in the first place.
 
 Once these are in place they protect you automatically. Current status:
 
-- [ ] **Branch protection on `main`** — Settings → Branches → Add rule
+- [x] **Branch protection on `main`** — Settings → Branches → Add rule
       - "Require a pull request before merging" — never straight onto `main`
       - "Require status checks to pass before merging" — tests as the gatekeeper
 
-      **Available now, still to be switched on.** This repository is public, so GitHub
-      offers branch protection on the free plan. Until the rule is added, "never commit
-      directly to `main`" is a rule kept by hand, not a gate the server enforces. Add the
-      rule, and mark the `Pester on Windows PowerShell 5.1` check as required.
+      **Switched on.** A pull request is required, the
+      `Pester on Windows PowerShell 5.1` check must pass, the branch must be up to date,
+      and force pushes and branch deletion are blocked. The rule applies to administrators
+      too, so "never commit directly to `main`" is now enforced by GitHub rather than kept
+      by hand. No approving review is required, so you can merge your own pull request once
+      the tests are green.
 
 - [x] **Continuous integration running the tests**, in `.github/workflows/tests.yml`. Every
       pull request, and every push to `main`, runs the whole suite on Windows against this
